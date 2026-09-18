@@ -10,9 +10,12 @@ class Window(tk.Tk):
         self.state('zoomed')
         self.title("Player Entry")
         self.configure(bg='gray1')
+        self.red_team = []
+        self.green_team = []
         self.create_title()
         self.create_teams()
         self.create_players()
+        
 
     def create_title(self):
         title = tk.Label(self, text="Entry Terminal", fg='gray100',bg='gray1',font=("Arial", 30, "bold"))
@@ -30,7 +33,7 @@ class Window(tk.Tk):
 
         red_title.grid(row=0, column=0, columnspan=3, pady=5)
         green_title.grid(row=0, column=0,columnspan=3,pady=5)
-        
+           
         
 #window.columnconfigure(0, weight=1)
 
@@ -38,10 +41,18 @@ class Window(tk.Tk):
         for i in range(MAX_PLAYERS):
             label = tk.Label(self.red_bg, text=i, fg='gray100',bg='Firebrick1', font=("Arial", 10))
             label.grid(row=i+1, column=0, sticky="w", pady=5)
+            entry1 = tk.Entry(self.red_bg, font=("Arial", 10))
+            entry1.grid(row=i+1, column=1, sticky="w")
+            self.red_team.append(entry1)
+            print(self.red_team[0].get())
+           
 
         for i in range(MAX_PLAYERS):
             label = tk.Label(self.green_bg, text=i, fg='gray100',bg='SpringGreen3', font=("Arial", 10))
             label.grid(row=i+1, column=0, sticky="w", pady=5)
+            entry1 = tk.Entry(self.green_bg, font=("Arial", 10))
+            entry1.grid(row=i+1, column=1, sticky="w")
+            self.green_team.append(entry1)
 
     
 window = Window()
