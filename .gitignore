@@ -1,0 +1,3 @@
+# Python bytecode cache — auto-generated, never needs to be in git
+__pycache__/
+*.pyc
