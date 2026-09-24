@@ -8,8 +8,9 @@ from Screen_utils import fit_current_screen
 
 def launch_main_screen():
     fit_current_screen(root)
+    root.configure(bg="gray1")
     app = Window(root)
-    app.pack(fill="both", expand=True)
+    app.place(relx=0.5, rely=0.5, anchor="center")
 
 root = tk.Tk()
 root.withdraw()

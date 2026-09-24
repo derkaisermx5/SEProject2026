@@ -19,7 +19,7 @@ class Window(tk.Frame):
         self.create_players()
  
         keyboard.add_hotkey('ctrl+q', self.print_players)  # hotkey to print the players on each team to console
-        self.bind("<F1>", self.edit_game)  # hotkey to edit the players in the game
+        master.bind_all("<F1>", self.edit_game)  # hotkey to edit the players in the game
  
     def create_title(self):
         title = tk.Label(self, text="Entry Terminal", fg='gray100', bg='gray1', font=("Arial", 30, "bold"))
