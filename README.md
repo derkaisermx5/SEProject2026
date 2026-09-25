@@ -17,6 +17,10 @@ Entry terminal software for Photon laser tag (splash screen, player entry, UDP e
 - Python 3
 - PostgreSQL installed and running
 - `psql` available in your terminal
+- **Linux only:** tkinter isn't bundled with Python the way it is on Windows/Mac and needs a separate install:
+  ```bash
+  sudo apt install python3-tk
+  ```
 
 ## Install
 
