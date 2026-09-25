@@ -1,8 +1,11 @@
 import tkinter as tk
+# not sure if order matters when importing is calling a seperate file's function
 from tkinter import ttk, simpledialog
 from PIL import Image, ImageTk
 
 from udp_network import UDPNetwork, local_network_choices, validate_network
+
+from database import get_codename, add_player
  
 MAX_PLAYERS = 20
  
@@ -83,7 +86,7 @@ class Window(tk.Frame):
         self.update_network_label()
 
     def create_status_bar(self):  # one line under the teams showing the last UDP action
-        self.status_label = tk.Label(self, text="Press F1 to edit players, enter a name and press Enter to add them.",
+        self.status_label = tk.Label(self, text="Press F1, then Enter in a slot to look up/add player by ID.",
                                      fg='gray70', bg='gray1', font=("Arial", 10))
         self.status_label.grid(row=2, column=0, columnspan=3, pady=(10, 5))
 
@@ -98,13 +101,44 @@ class Window(tk.Frame):
         if not self.edit_mode:
             return
         entries = self.red_team if team == "red" else self.green_team
-        name = entries[slot].get().strip()
-        if not name:
+
+        # 1st - ask user for the database player ID
+        player_id = simpledialog.askinteger(
+            "Player ID", "Enter the player ID:", parent=self
+        )
+        if player_id is None:
             return
+
+        # 2nd - Here its about look up/inserting in PostgreSQL
+        try:
+            name = get_codename(player_id)
+            if name is None:
+                name = simpledialog.askstring(
+                    "New Player",
+                    f"No player with ID {player_id}. Enter a codename:",
+                    parent=self,
+                )
+                if not name or not name.strip():
+                    return
+                name = name.strip()
+                add_player(player_id, name)
+                self.set_status(f"Saved new player {player_id} ({name}) to database", "green")
+            else:
+                self.set_status(f"Found player {player_id} ({name}) in database", "green")
+        except Exception as e:
+            self.set_status(f"Database error: {e}", "Firebrick1")
+            return
+
+        # 3rd - here i have to put codename in the entry box
+        entries[slot].delete(0, "end")
+        entries[slot].insert(0, name)
+
+        # 4th - small adjustment to the UDP previously updated
         equipment_id = simpledialog.askinteger("Equipment ID", f"Enter the equipment ID for {name}:", parent=self)
         if equipment_id is None:  # cancelled
             return
         self.player_added(team, slot, name, equipment_id)
+        
 
     def player_added(self, team, slot, name, equipment_id):
         """Call this every time a player is added to a team.

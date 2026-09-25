@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS players (
+  id INTEGER PRIMARY KEY,
+  codename VARCHAR(30) NOT NULL
+);

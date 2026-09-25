@@ -1,2 +1,5 @@
 Pillow
 screeninfo
+
+# the psycopg2-binary is the driver we're adding
+psycopg2-binary
