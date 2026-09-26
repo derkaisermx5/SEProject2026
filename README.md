@@ -37,9 +37,21 @@ PostgreSQL itself is not installed by this script — set that up separately.
 ## Database setup
 
 ```bash
-psql -d postgres -f create_database.sql
-psql -d photon -f players.sql
+psql -U postgres -d postgres -f create_database.sql
+psql -U postgres -d photon -f players.sql
 ```
+
+The app reads your PostgreSQL password from an environment variable named `PHOTON_DB_PASSWORD` (it's never hardcoded in the code). Set it to whatever password you chose for the `postgres` user during your own PostgreSQL install.
+
+**If you're just testing/grading this once**, use the temporary version — it only lasts for your current terminal window and leaves nothing behind afterward:
+
+- Windows (Command Prompt): `set PHOTON_DB_PASSWORD=your_postgres_password`
+- Linux/Mac (bash): `export PHOTON_DB_PASSWORD=your_postgres_password`
+
+**If this is your own dev machine** and you'll be running the app repeatedly, set it permanently instead so you don't have to retype it every session:
+
+- Windows: search "Edit the system environment variables" → Environment Variables → under *User variables*, click New → Name: `PHOTON_DB_PASSWORD`, Value: your password. Open a new terminal afterward for it to take effect.
+- Linux/Mac: add `export PHOTON_DB_PASSWORD=your_postgres_password` to `~/.bashrc` (or `~/.zshrc` on Mac), then run `source ~/.bashrc`.
 
 ## Run
 

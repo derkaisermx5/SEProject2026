@@ -1,12 +1,13 @@
 # this is the updated sample from Dr. Strother python-pg.py file
 
+import os
 import psycopg2
 
 # Define connection parameters
 connection_params = {
     'dbname': 'photon',
-    #'user': 'student',
-    #'password': 'student',
+    'user': 'postgres',
+    'password': os.environ.get('PHOTON_DB_PASSWORD'),
     #'host': 'localhost',
     #'port': '5432'
 }
