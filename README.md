@@ -27,7 +27,7 @@ Entry terminal software for Photon laser tag (splash screen, player entry, UDP e
 From the project folder:
 
 ```bash
-python Install.py
+python Install.py (python3 Install.py)
 ```
 
 This install Python packages from `requirements.txt` (Pillow, screeninfo, psycopg2-binary).
@@ -56,13 +56,13 @@ The app reads your PostgreSQL password from an environment variable named `PHOTO
 ## Run
 
 ```bash
-python main.py
+python main.py (python3 main.py)
 ```
 
 Optional network for UDP (if needed):
 
 ```bash
-python main.py --network 127.0.0.1
+python main.py --network 127.0.0.1 (python3 main.py --network 127.0.0.1
 ```
 
 ### Player entry (quick)
