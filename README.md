@@ -77,3 +77,29 @@ python main.py --network 127.0.0.1
 - App **sends** on port **7500**
 - App **listens** on port **7501**
 - Default address: **127.0.0.1**
+
+## Debugging for Debian
+If pip commands aren't working, Debian's repository configurations need to be fixed
+1. Back up current repository configuration
+```bash
+sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
+``` 
+2. Open the repository configuration
+```bash
+sudo nano /etc/apt/sources.list
+```
+3. When inside the configuration, comment out any "security.debian.org" lines or "bullseye-security" with a # in the front
+4. Add this line `deb http://archive.debian.org/debian bullseye main contrib non-free`
+5. Save with CTRL + o and exit with CTRL + x
+6. Run the update command to verify if everything worked
+```bash
+sudo apt update
+```
+7. Run the pip command to install python3 pip and tkinter
+```bash
+sudo apt install python3-pip
+```
+```bash
+sudo apt install python3-tk
+```
+8. Everything should be set to run the Install script
