@@ -10,8 +10,9 @@ from database import get_codename, add_player
 MAX_PLAYERS = 20
  
 class Window(tk.Frame):
-    def __init__(self, master, udp=None):
+    def __init__(self, master, udp=None, on_start=None):
         super().__init__(master)
+        self.on_start = on_start  # called with (red_players, green_players) when F5 is pressed
         master.title("Player Entry")
         self.configure(bg='gray1')
         self.udp = udp if udp is not None else UDPNetwork()  # UDP sockets (broadcast 7500 / receive 7501)
@@ -28,6 +29,7 @@ class Window(tk.Frame):
         master.bind_all("<Control-q>", lambda e: self.print_players())  # hotkey to print the players on each team to console
         master.bind_all("<F1>", self.edit_game)  # hotkey to edit the players in the game
         master.bind_all("<F2>", self.change_network)  # hotkey to pick a different network for the UDP sockets
+        master.bind_all("<F5>", self.start_game)  # hotkey to switch to the play action screen and start the game
  
     def create_title(self):
         title = tk.Label(self, text="Entry Terminal", fg='gray100', bg='gray1', font=("Arial", 30, "bold"))
@@ -81,8 +83,15 @@ class Window(tk.Frame):
         for w in (f2_box, f2_label):
             w.bind("<Button-1>", self.change_network)
 
+        f5_box = tk.Frame(key_frame, bg='gray1', highlightbackground='gray50', highlightthickness=2, width=120, height=70)
+        f5_box.grid(row=2, column=0, pady=3)
+        f5_label = tk.Label(f5_box, text="F5\nStart Game", fg='lime', bg='gray1', font=("Arial", 10, "bold"))
+        f5_label.pack()
+        for w in (f5_box, f5_label):
+            w.bind("<Button-1>", self.start_game)
+
         self.network_label = tk.Label(key_frame, text="", fg='gray100', bg='gray1', font=("Arial", 10), justify="center")
-        self.network_label.grid(row=2, column=0, pady=(10, 3))
+        self.network_label.grid(row=3, column=0, pady=(10, 3))
         self.update_network_label()
 
     def create_status_bar(self):  # one line under the teams showing the last UDP action
@@ -98,7 +107,7 @@ class Window(tk.Frame):
 
     # ---------------- UDP: equipment codes ----------------
     def player_entered(self, team, slot):  # Enter pressed in a player's name box
-        if not self.edit_mode:
+        if not self.edit_mode or not self.winfo_ismapped():
             return
         entries = self.red_team if team == "red" else self.green_team
 
@@ -153,6 +162,8 @@ class Window(tk.Frame):
 
     # ---------------- UDP: network selection ----------------
     def change_network(self, event=None):  # F2: pick a different network for the UDP sockets
+        if not self.winfo_ismapped():  # entry screen not showing (e.g. game in progress)
+            return
         NetworkDialog(self, self.udp, on_changed=self.network_changed)
 
     def network_changed(self, address):
@@ -160,6 +171,8 @@ class Window(tk.Frame):
         self.set_status(f"UDP network changed to {address}", 'lime')
  
     def edit_game(self, event=None):  # method to add and edit the players in the game
+        if not self.winfo_ismapped():  # entry screen not showing (e.g. game in progress)
+            return
         if self.edit_mode == False:
             self.edit_mode = True
  
@@ -182,6 +195,31 @@ class Window(tk.Frame):
  
             print("Edit mode disabled")
  
+    # ---------------- F5: start game ----------------
+    def get_players(self):  # returns (red_players, green_players) from the filled-in slots
+        teams = {}
+        for team, entries in (("red", self.red_team), ("green", self.green_team)):
+            players = []
+            for slot, entry in enumerate(entries):
+                name = entry.get().strip()
+                if name:
+                    players.append({"codename": name, "equipment_id": self.equipment_ids.get((team, slot))})
+            teams[team] = players
+        return teams["red"], teams["green"]
+
+    def start_game(self, event=None):  # F5: switch to the play action screen and start the game
+        if not self.winfo_ismapped():  # already on the play action screen
+            return
+        red, green = self.get_players()
+        if not red and not green:
+            self.set_status("Add at least one player before starting the game (F5).", 'Firebrick1')
+            return
+        if self.edit_mode:  # lock the entries before leaving the screen
+            self.edit_game()
+        print(f"Starting game: {len(red)} red player(s), {len(green)} green player(s)")
+        if self.on_start:
+            self.on_start(red, green)
+
     def print_players(self):  # print players on each team
         for entry in self.red_team:
             print(entry.get())
