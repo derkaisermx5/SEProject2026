@@ -30,6 +30,7 @@ class Window(tk.Frame):
         master.bind_all("<F1>", self.edit_game)  # hotkey to edit the players in the game
         master.bind_all("<F2>", self.change_network)  # hotkey to pick a different network for the UDP sockets
         master.bind_all("<F5>", self.start_game)  # hotkey to switch to the play action screen and start the game
+        master.bind_all("<F12>", self.clear_players) # when F12 is pressed, calls clear_players() method
  
     def create_title(self):
         title = tk.Label(self, text="Entry Terminal", fg='gray100', bg='gray1', font=("Arial", 30, "bold"))
@@ -90,8 +91,15 @@ class Window(tk.Frame):
         for w in (f5_box, f5_label):
             w.bind("<Button-1>", self.start_game)
 
+        f12_box = tk.Frame(key_frame, bg='gray1', highlightbackground='gray50', highlightthickness=2, width=120, height=70)
+        f12_box.grid(row=3, column=0, pady=3)
+        f12_label = tk.Label(f12_box, text="F12\nClear Players", fg='lime', bg='gray1', font=("Arial", 10, "bold"))
+        f12_label.pack()
+        for w in (f12_box, f12_label):
+            w.bind("<Button-1>", self.clear_players)
+
         self.network_label = tk.Label(key_frame, text="", fg='gray100', bg='gray1', font=("Arial", 10), justify="center")
-        self.network_label.grid(row=3, column=0, pady=(10, 3))
+        self.network_label.grid(row=4, column=0, pady=(10, 3))
         self.update_network_label()
 
     def create_status_bar(self):  # one line under the teams showing the last UDP action
@@ -194,6 +202,28 @@ class Window(tk.Frame):
                 entry.config(state="disabled")
  
             print("Edit mode disabled")
+
+    # ---------------- F5: start game ----------------
+    def clear_players(self, event=None):
+        # the two lines below check whether my entry screen is visible
+        if not self.winfo_ismapped():
+            return
+            # it prevents F12 from clearing players when entry screen isn't showing
+        
+        # loop through both teams, combibing them lets us clear every entry in one loop
+        for entry in self.red_team + self.green_team:
+            entry.config(state="normal")
+            entry.delete(0, "end")
+
+            if not self.edit_game:
+                entry.config(state="disabled")
+                # restoring previous editimg state
+        
+        # this is meant for clearing the equipments IDs
+        self.equipment_ids.clear()
+
+        # afterwards I have to display a confirmation for the status bar
+        self.set_status("All players have been cleared.", "lime")
  
     # ---------------- F5: start game ----------------
     def get_players(self):  # returns (red_players, green_players) from the filled-in slots
