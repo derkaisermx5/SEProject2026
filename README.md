@@ -32,6 +32,18 @@ python Install.py (python3 Install.py)
 
 This install Python packages from `requirements.txt` (Pillow, screeninfo, psycopg2-binary).
 
+When running Install.py on Debian, make sure it is ran in a virtual environment.
+Install Python's virtual environments.
+```bash
+sudo apt update 
+sudo apt install python3-venv
+```
+After that, start a virtual environment in the directory where all the code is stored with these commands.
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+This will create a virtual environment folder in the directory and allow the install script to work.
 PostgreSQL itself is not installed by this script — set that up separately.
 
 ## Database setup

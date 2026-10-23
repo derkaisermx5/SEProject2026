@@ -4,6 +4,7 @@
 
 import tkinter as tk
 from PIL import Image, ImageTk 
+from pathlib import Path
 
 from Screen_utils import get_current_monitor 
 # use the tkinker to make the splash screen 
@@ -20,6 +21,7 @@ class SplashScreen(tk.Toplevel):
         monitor = get_current_monitor(master)
         self.geometry(f"{monitor.width}x{monitor.height}+{monitor.x}+{monitor.y}")
 
+        image_path = Path(__file__).resolve().parent / image_path
         pil_image = Image.open(image_path)
         pil_image = pil_image.resize((monitor.width, monitor.height))
 
@@ -36,4 +38,3 @@ class SplashScreen(tk.Toplevel):
             self.on_done()
 
 
-    

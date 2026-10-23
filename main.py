@@ -4,6 +4,7 @@ from screeninfo import get_monitors
 
 from Splash import SplashScreen
 from PlayerEntryScreen import Window
+from PlayActionScreen import PlayActionScreen
 from Screen_utils import fit_current_screen
 from udp_network import UDPNetwork, DEFAULT_NETWORK
 
@@ -17,11 +18,24 @@ args = parser.parse_args()
 udp = UDPNetwork(args.network)  # broadcast on 7500, receive on 7501
 
 
+entry_screen = None
+play_screen = None
+
+
 def launch_main_screen():
+    global entry_screen
     fit_current_screen(root)
     root.configure(bg="gray1")
-    app = Window(root, udp)
-    app.place(relx=0.5, rely=0.5, anchor="center")
+    entry_screen = Window(root, udp, on_start=start_game)
+    entry_screen.place(relx=0.5, rely=0.5, anchor="center")
+
+
+def start_game(red_players, green_players):  # F5 on the entry screen
+    global play_screen
+    entry_screen.place_forget()  # hide the entry screen (kept so we can come back later)
+    play_screen = PlayActionScreen(root, red_players, green_players, udp)
+    play_screen.pack(fill="both", expand=True)
+    play_screen.start_game()
 
 
 def on_close():
