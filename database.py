@@ -6,11 +6,21 @@ import psycopg2
 # Define connection parameters
 connection_params = {
     'dbname': 'photon',
-    'user': 'postgres',
-    'password': os.environ.get('PHOTON_DB_PASSWORD'),
-    #'host': 'localhost',
-    #'port': '5432'
+  
 }
+
+
+#Optional overrides if we want to run Postgres on our machines the default for Debian is untouched
+for key, env_name in (
+    ('user', 'PHOTON_DB_USER'),
+    ('password', 'PHOTON_DB_PASSWORD'),
+    ('host', 'PHOTON_DB_HOST'),
+    ('port', 'PHOTON_DB_PORT'),
+):
+    value = os.environ.get(env_name)
+    if value: 
+        connection_params[key] = value
+
 
 def get_connection():
     # I have to open a connection to the phton database.
