@@ -248,8 +248,6 @@ class Window(tk.Frame):
         if self.edit_mode:  # lock the entries before leaving the screen
             self.edit_game()
         print(f"Starting game: {len(red)} red player(s), {len(green)} green player(s)")
-        # if self.on_start:
-        #     self.on_start(red, green)
         try: # 30 second Countdown goes first then the game starts
             CountdownScreen(self.winfo_toplevel(), on_done=lambda: self.begin_game(red, green))
         except FileNotFoundError as e: 
@@ -260,7 +258,7 @@ class Window(tk.Frame):
     def begin_game(self, red, green):
         if self.on_start:
             self.on_start(red, green)
-            
+
 
     def print_players(self):  # print players on each team
         for entry in self.red_team:
