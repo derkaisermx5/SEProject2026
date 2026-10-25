@@ -1,6 +1,6 @@
 import tkinter as tk
 # not sure if order matters when importing is calling a seperate file's function
-from tkinter import ttk, simpledialog
+from tkinter import ttk, simpledialog, messagebox
 from PIL import Image, ImageTk
 
 from udp_network import UDPNetwork, local_network_choices, validate_network
@@ -122,7 +122,7 @@ class Window(tk.Frame):
 
         # 1st - ask user for the database player ID
         player_id = simpledialog.askinteger(
-            "Player ID", "Enter the player ID:", parent=self
+            "Player ID", "Enter the player ID:", parent=self, minvalue=1
         )
         if player_id is None:
             return
@@ -147,14 +147,22 @@ class Window(tk.Frame):
             self.set_status(f"Database error: {e}", "Firebrick1")
             return
 
-        # 3rd - here i have to put codename in the entry box
-        entries[slot].delete(0, "end")
-        entries[slot].insert(0, name)
+        
 
-        # 4th - small adjustment to the UDP previously updated
+        # 3rde - small adjustment to the UDP previously updated
         equipment_id = simpledialog.askinteger("Equipment ID", f"Enter the equipment ID for {name}:", parent=self, minvalue=1, maxvalue=80)
         if equipment_id is None:  # cancelled
             return
+        
+        for (assigned_team, assigned_slot), assigned_id in self.equipment_ids.items():
+            if assigned_id == equipment_id and (assigned_team, assigned_slot) != (team, slot):
+                messagebox.showerror("Duplicate Equipment ID", f"Equipment ID {equipment_id} is already assigned.", parent=self
+            )
+                return
+        
+        # 4th - here i have to put codename in the entry box
+        entries[slot].delete(0, "end")
+        entries[slot].insert(0, name)
         self.player_added(team, slot, name, equipment_id)
         
 
@@ -165,7 +173,7 @@ class Window(tk.Frame):
         try:
             self.udp.broadcast_equipment_id(equipment_id)
         except OSError as e:
-            self.set_status(f"Could not broadcast equipment ID {equipment_id}: {e}", 'Firebrick1')
+            self.set_status(f"Player was saved but could not broadcast equipment ID {equipment_id}: {e}", 'Firebrick1')
             return
         self.set_status(f"Added {name} ({team} team) - broadcast equipment ID {equipment_id} to {self.udp.network}:7500", 'lime')
 
@@ -216,7 +224,7 @@ class Window(tk.Frame):
             entry.config(state="normal")
             entry.delete(0, "end")
 
-            if not self.edit_game:
+            if not self.edit_mode:
                 entry.config(state="disabled")
                 # restoring previous editimg state
         
@@ -242,6 +250,8 @@ class Window(tk.Frame):
         if not self.winfo_ismapped():  # already on the play action screen
             return
         red, green = self.get_players()
+        if any(player["equipment_id"] is None for player in red + green):
+            self.set_status("All players need an equipment ID to start.", "Firebrick1")
         if not red and not green:
             self.set_status("Add at least one player before starting the game (F5).", 'Firebrick1')
             return

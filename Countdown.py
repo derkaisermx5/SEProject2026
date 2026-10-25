@@ -69,6 +69,9 @@ class CountdownScreen(tk.Frame):
 
 
     def _resize(self, event):
+        if event.widget != self:
+            return
+        
         self._photo_cache.clear() 
         if self._shown is not None:
             self._show(self._shown)
