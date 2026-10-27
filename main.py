@@ -1,3 +1,11 @@
+import os
+import sys
+
+# Debian blocks pip installs on the system Python, so Install.py puts the packages in ./venv.
+# If that venv exists and we were not started from it, restart this program using it.
+_venv_python = os.path.join(os.path.dirname(os.path.abspath(__file__)), "venv", "bin", "python")
+if sys.prefix == sys.base_prefix and os.path.exists(_venv_python):
+    os.execv(_venv_python, [_venv_python] + sys.argv)
 import argparse
 import tkinter as tk
 from screeninfo import get_monitors
