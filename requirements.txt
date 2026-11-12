@@ -3,3 +3,6 @@ screeninfo
 
 # the psycopg2-binary is the driver we're adding
 psycopg2-binary
+
+# the following provides the module for playing/loading audio
+pygame-ce

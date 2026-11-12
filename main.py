@@ -8,6 +8,7 @@ if sys.prefix == sys.base_prefix and os.path.exists(_venv_python):
     os.execv(_venv_python, [_venv_python] + sys.argv)
 import argparse
 import tkinter as tk
+import pygame
 from screeninfo import get_monitors
 
 from Splash import SplashScreen
@@ -47,6 +48,11 @@ def start_game(red_players, green_players):  # F5 on the entry screen
 
 
 def on_close():
+    # I will need to stop the music before actually closing the program
+    if pygame.mixer.get_init():
+        pygame.mixer.music.stop()
+        pygame.mixer.quit()
+
     udp.close()
     root.destroy()
 

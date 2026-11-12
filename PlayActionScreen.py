@@ -9,6 +9,13 @@
 #   3. Time remaining.
 
 import tkinter as tk
+import random
+from pathlib import Path
+import pygame
+
+# random - is the randomizer for playing random tracks
+# path - locates the music files in our project directory
+# pygame - will play the selected mp3 track
 
 GAME_LENGTH_SECONDS = 6 * 60
 
@@ -147,6 +154,44 @@ class PlayActionScreen(tk.Frame):
             except OSError as e:
                 print(f"[Game] Could not broadcast start code: {e}")
         print("[Game] Game started")
+
+        # the code 202 via UDP, needs the method call for playing the random tracl
+        # meaninng the music will auto start after the countdown
+        self.play_random_music()
+
+    # ------------------- random music ----------------
+    def play_random_music(self):
+        # first I have to find the folder that contains the music files
+        music_folder = Path(__file__).resolve().parent / "photon_tracks"
+
+        # then I have to retrieve all of the mp3 files from said folder
+        tracks = list(music_folder.glob("*.mp3"))
+
+        # I have to check that there's available tracks
+        if not tracks:
+            print("No music tracks located.")
+            return
+
+        # THIS IS THE CORE OF MY ASSIGNMENT, here's where I randomly select one
+        selected_track = random.choice(tracks)
+        # ill just do a basic try and catch
+        try:
+            #init the music starter/player
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+
+            # then I load/play the track we select
+            # .load() loads the selected audio
+            pygame.mixer.music.load(str(selected_track))
+            #ill just hardcode since its quicker for now
+            # .play(-1) this will start playback and repeat the song repeatedly
+            pygame.mixer.music.play(-1)
+
+            print(f"Now playing: {selected_track.name}")
+
+        except pygame.error as e:
+            print(f"Could not play music: {e}")
+
 
 
 # Run this file on its own to preview the screen with sample players.
