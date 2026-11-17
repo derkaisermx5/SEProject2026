@@ -157,6 +157,9 @@ class UDPNetwork:
         for _ in range(3):              # end code is sent three times
             self.broadcast(CODE_END_GAME)
 
+    def send_response(self, message, address): #send a response to traffic generator
+        self.broadcast(message)
+    
     def get_messages(self):
         """Return (and clear) all messages received since the last call."""
         items = []
