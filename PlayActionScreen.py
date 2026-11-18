@@ -14,11 +14,15 @@ import random
 from pathlib import Path
 import pygame
 
+from udp_network import CODE_RED_BASE_SCORED, CODE_GREEN_BASE_SCORED
+
 # random - is the randomizer for playing random tracks
 # path - locates the music files in our project directory
 # pygame - will play the selected mp3 track
 
 GAME_LENGTH_SECONDS = 6 * 60
+TAG_POINTS = 10             # tagging an opposing player
+FRIENDLY_FIRE_PENALTY = 10  # tagger AND tagged player both lose this
 AUDIO_START_SECONDS = 0    # this variable keeps count how much seconds needed so the voice of the woman hits the countdown properly
 RED = "Firebrick1"
 GREEN = "SpringGreen3"
@@ -141,27 +145,76 @@ class PlayActionScreen(tk.Frame):
         self.action_text.see("end")
         self.action_text.config(state="disabled")
 
-    def check_udp(self): #method to check and recieve udp data
-        
-        if self.game_running == False:
+    def check_udp(self):  # poll the UDP receive queue every 100 ms while the game runs
+        if not self.game_running or self.udp is None:
             return
 
-        if self.udp == None:
+        for message, address in self.udp.get_messages():
+            self.handle_message(message)
+
+        self.after(100, self.check_udp)
+
+    # ---------------- hit handling ----------------
+    def find_player(self, equipment_id):
+        """Return (team, player_dict) for an equipment id, or (None, None) if nobody has it."""
+        for team, players in self.teams.items():
+            for player in players:
+                if player.get("equipment_id") is not None and int(player["equipment_id"]) == equipment_id:
+                    return team, player
+        return None, None
+
+    def _send(self, code):
+        if self.udp is None:
+            return
+        try:
+            self.udp.broadcast(code)
+        except OSError as e:
+            self.add_event("UDP error: " + str(e))
+
+    def handle_message(self, message):
+        """Handle one received message in the form  <tagger equipment id>:<hit equipment id>."""
+        try:
+            tagger_text, hit_text = message.split(":")
+            tagger_id, hit_id = int(tagger_text), int(hit_text)
+        except ValueError:
+            self.add_event(f"Ignored bad UDP message: {message!r}")
             return
 
-        messages = self.udp.get_messages()
+        if hit_id in (CODE_RED_BASE_SCORED, CODE_GREEN_BASE_SCORED):
+            team, player = self.find_player(tagger_id)
+            name = player["codename"] if player else f"Equipment {tagger_id}"
+            base = "red" if hit_id == CODE_RED_BASE_SCORED else "green"
+            self.add_event(f"{name} scored the {base} base")
+            self._send(hit_id)
+            return
 
-        for message, address in messages:
-            text = "Received UDP event: " + str(message)
-            self.add_event(text)
-            #if a udp event was recieved, send an acknowledgement back
-            try:
-                self.udp.send_response("ACK", address)
-            except OSError as e:
-                self.add_event("UDP error: " + str(e))
+        self.handle_hit(tagger_id, hit_id)
 
-        self.after(100, self.check_udp) #check udp again after 100ms
-        
+    def handle_hit(self, tagger_id, hit_id):
+        tagger_team, tagger = self.find_player(tagger_id)
+        hit_team, hit = self.find_player(hit_id)
+
+        # Requirement: always broadcast the equipment id of the player who was hit.
+        self._send(hit_id)
+
+        if tagger is None or hit is None:
+            missing = tagger_id if tagger is None else hit_id
+            self.add_event(f"Hit {tagger_id} -> {hit_id} (equipment {missing} is not in this game)")
+            return
+
+        if tagger_team == hit_team:
+            # FRIENDLY FIRE: both players lose 10 points, and the tagger's own
+            # equipment id is broadcast as a second transmission.
+            tagger["score"] -= FRIENDLY_FIRE_PENALTY
+            hit["score"] -= FRIENDLY_FIRE_PENALTY
+            self._send(tagger_id)
+            self.add_event(f"FRIENDLY FIRE! {tagger['codename']} tagged teammate {hit['codename']} "
+                           f"(both -{FRIENDLY_FIRE_PENALTY})")
+        else:
+            tagger["score"] += TAG_POINTS
+            self.add_event(f"{tagger['codename']} tagged {hit['codename']}")
+
+        self.refresh_teams()
 
     def set_time_remaining(self, seconds):
         minutes, secs = divmod(max(0, int(seconds)), 60)
@@ -258,11 +311,27 @@ class PlayActionScreen(tk.Frame):
 
 # Run this file on its own to preview the screen with sample players.
 if __name__ == "__main__":
+    import sys
     root = tk.Tk()
     root.geometry("1100x800")
     root.configure(bg=BG)
     red = [{"codename": n, "equipment_id": i} for i, n in enumerate(["Opus", "Viper", "Ghost"], 1)]
     green = [{"codename": n, "equipment_id": i} for i, n in enumerate(["Scooby", "Shadow"], 11)]
-    screen = PlayActionScreen(root, red, green)
+
+    live = "--live" in sys.argv
+    udp = None
+    if live:
+        from udp_network import UDPNetwork
+        udp = UDPNetwork()
+
+    screen = PlayActionScreen(root, red, green, udp)
     screen.pack(fill="both", expand=True)
+    if live:
+        screen.start_game()
+
+    def close():
+        if udp is not None:
+            udp.close()
+        root.destroy()
+    root.protocol("WM_DELETE_WINDOW", close)
     root.mainloop()

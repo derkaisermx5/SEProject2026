@@ -114,7 +114,7 @@ class UDPNetwork:
                 continue
             except OSError:
                 break
-            message = data.decode(errors="replace").strip()
+            message = data.decode(errors="replace").strip("\0 \t\r\n") 
             print(f"[UDP] Received '{message}' from {addr[0]}:{addr[1]}")
             self.messages.put((message, addr))
             if self.on_receive:
