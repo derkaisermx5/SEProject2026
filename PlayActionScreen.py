@@ -7,7 +7,8 @@
 #   2. "Current Game Action" window for play-by-play events (empty for now -
 #      events come in a later sprint; use add_event() to post one).
 #   3. Time remaining.
-
+import math 
+import time
 import tkinter as tk
 import random
 from pathlib import Path
@@ -18,7 +19,7 @@ import pygame
 # pygame - will play the selected mp3 track
 
 GAME_LENGTH_SECONDS = 6 * 60
-
+AUDIO_START_SECONDS = 0    # this variable keeps count how much seconds needed so the voice of the woman hits the countdown properly
 RED = "Firebrick1"
 GREEN = "SpringGreen3"
 BG = "gray1"
@@ -36,6 +37,8 @@ class PlayActionScreen(tk.Frame):
         master.title("Play Action")
         self.udp = udp
         self.game_running = False
+        self._timer_after_id = None
+        self._timer_end = None
 
         # every player starts the game with 0 points
         self.teams = {
@@ -154,13 +157,49 @@ class PlayActionScreen(tk.Frame):
             except OSError as e:
                 print(f"[Game] Could not broadcast start code: {e}")
         print("[Game] Game started")
+        self.start_timer()
 
         # the code 202 via UDP, needs the method call for playing the random tracl
         # meaninng the music will auto start after the countdown
-        self.play_random_music()
+        # self.play_random_music()
+
+    #Start Timer for 6 minutes called once after the 30 second countdown
+    def start_timer(self):
+        self._timer_end = time.monotonic() + GAME_LENGTH_SECONDS
+        self._timer_tick()
+
+    def _timer_tick(self):
+        remaining = math.ceil(self._timer_end - time.monotonic())
+        self.set_time_remaining(remaining)
+        if remaining <= 0:
+            self.end_game()
+            return
+        self._timer_after_id = self.after(200, self._timer_tick)
+
+    # After time is up the endcode is broadcasted 221 sent by the UDP class
+    def end_game(self):
+        self.game_running = False
+        self._timer_after_id = None
+        if self.udp is not None: 
+            try:
+                self.udp.broadcast_end()
+            except OSError as e:
+                print(f"[Game] could not broadcast the code: {e}")
+        print("[Game] Game over")
+        if pygame.mixer.get_init():
+            pygame.mixer.music.stop()
+
+    def destroy(self):
+        if pygame.mixer.get_init():
+            pygame.mixer.music.stop()
+        if self._timer_after_id is not None:
+            self.after_cancel(self._timer_after_id)
+            self._timer_after_id = None
+        super().destroy()
 
     # ------------------- random music ----------------
-    def play_random_music(self):
+    @staticmethod
+    def play_random_music():
         # first I have to find the folder that contains the music files
         music_folder = Path(__file__).resolve().parent / "photon_tracks"
 
@@ -185,7 +224,7 @@ class PlayActionScreen(tk.Frame):
             pygame.mixer.music.load(str(selected_track))
             #ill just hardcode since its quicker for now
             # .play(-1) this will start playback and repeat the song repeatedly
-            pygame.mixer.music.play(-1)
+            pygame.mixer.music.play(start=AUDIO_START_SECONDS)
 
             print(f"Now playing: {selected_track.name}")
 

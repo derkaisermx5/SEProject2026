@@ -7,6 +7,7 @@ from udp_network import UDPNetwork, local_network_choices, validate_network
 
 from database import get_codename, add_player
 from Countdown import CountdownScreen
+from PlayActionScreen import PlayActionScreen
  
 MAX_PLAYERS = 20
  
@@ -264,6 +265,7 @@ class Window(tk.Frame):
         except FileNotFoundError as e:  # countdown pictures missing: stay on the entry screen
             self.set_status(str(e), 'Firebrick1')
             return
+        self.after(16000, PlayActionScreen.play_random_music)
         self.place_forget()  # hide the entry screen during the countdown
 
     def begin_game(self, red, green):  
