@@ -141,6 +141,28 @@ class PlayActionScreen(tk.Frame):
         self.action_text.see("end")
         self.action_text.config(state="disabled")
 
+    def check_udp(self): #method to check and recieve udp data
+        
+        if self.game_running == False:
+            return
+
+        if self.udp == None:
+            return
+
+        messages = self.udp.get_messages()
+
+        for message, address in messages:
+            text = "Received UDP event: " + str(message)
+            self.add_event(text)
+            #if a udp event was recieved, send an acknowledgement back
+            try:
+                self.udp.send_response("ACK", address)
+            except OSError as e:
+                self.add_event("UDP error: " + str(e))
+
+        self.after(100, self.check_udp) #check udp again after 100ms
+        
+
     def set_time_remaining(self, seconds):
         minutes, secs = divmod(max(0, int(seconds)), 60)
         self.timer_label.config(text=f"Time Remaining: {minutes}:{secs:02d}")
@@ -151,6 +173,7 @@ class PlayActionScreen(tk.Frame):
         NOTE for the 30-second countdown task: call this when the countdown
         reaches zero instead of right away."""
         self.game_running = True
+        self.check_udp()
         if self.udp is not None:
             try:
                 self.udp.broadcast_start()
