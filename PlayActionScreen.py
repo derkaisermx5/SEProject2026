@@ -13,7 +13,7 @@ import tkinter as tk
 import random
 from pathlib import Path
 import pygame
-
+from PIL import Image, ImageTk
 from udp_network import CODE_RED_BASE_SCORED, CODE_GREEN_BASE_SCORED
 
 # random - is the randomizer for playing random tracks
@@ -44,10 +44,14 @@ class PlayActionScreen(tk.Frame):
         self._timer_after_id = None
         self._timer_end = None
 
+        icon_path = Path(__file__).resolve().parent / "images" / "baseicon.jpg"
+        icon_image = Image.open(icon_path)
+        icon_image = icon_image.resize((30, 17))
+        self.base_icon = ImageTk.PhotoImage(icon_image)
         # every player starts the game with 0 points
         self.teams = {
-            "red": [dict(p, score=0) for p in red_players],
-            "green": [dict(p, score=0) for p in green_players],
+            "red": [dict(p, score=0, base_hit=False) for p in red_players],
+            "green": [dict(p, score=0, base_hit=False) for p in green_players],
         }
         self.team_frames = {}
         self.team_total_labels = {}
@@ -87,7 +91,9 @@ class PlayActionScreen(tk.Frame):
 
             players_frame = tk.Frame(panel, bg=PANEL_BG)   # filled in by refresh_teams()
             players_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=5)
-            players_frame.columnconfigure(0, weight=1)
+            players_frame.columnconfigure(0, minsize=150)
+            players_frame.columnconfigure(1, minsize=40)
+            players_frame.columnconfigure(2, weight=1)
             self.team_frames[team] = players_frame
 
             total = tk.Label(panel, text="", fg=color, bg=PANEL_BG, font=("Arial", 16, "bold"), anchor="e")
@@ -126,9 +132,12 @@ class PlayActionScreen(tk.Frame):
             size = 13 if len(ranked) <= 12 else 11   # smaller rows so a full team still fits
             for row, player in enumerate(ranked):
                 tk.Label(frame, text=player["codename"], fg="gray100", bg=PANEL_BG,
-                         font=("Arial", size), anchor="w", pady=0).grid(row=row, column=0, sticky="ew")
+                         font=("Arial", size), anchor="w", pady=0).grid(row=row, column=0, sticky="w")
+                if player["base_hit"] == True:
+                    tk.Label(frame, image=self.base_icon, bg=PANEL_BG).grid(row=row, column=1, sticky="w", padx=5)
+                
                 tk.Label(frame, text=str(player["score"]), fg="gray100", bg=PANEL_BG,
-                         font=("Arial", size), anchor="e", pady=0).grid(row=row, column=1, sticky="e")
+                         font=("Arial", size), anchor="e", pady=0).grid(row=row, column=2, sticky="e")
             if not ranked:
                 tk.Label(frame, text="(no players)", fg="gray50", bg=PANEL_BG,
                          font=("Arial", 12, "italic")).grid(row=0, column=0, sticky="w")
@@ -184,6 +193,11 @@ class PlayActionScreen(tk.Frame):
             team, player = self.find_player(tagger_id)
             name = player["codename"] if player else f"Equipment {tagger_id}"
             base = "red" if hit_id == CODE_RED_BASE_SCORED else "green"
+            
+            if player is not None:
+                player["base_hit"] = True
+                self.refresh_teams()
+                
             self.add_event(f"{name} scored the {base} base")
             self._send(hit_id)
             return
