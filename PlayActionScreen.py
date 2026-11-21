@@ -57,9 +57,9 @@ class PlayActionScreen(tk.Frame):
         self.team_total_labels = {}
 
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)   # team windows
-        self.rowconfigure(3, weight=0)   # game action window
-        self.rowconfigure(4, weight=0)
+        self.rowconfigure(1, weight=1, minsize=0)   # team windows
+        self.rowconfigure(3, weight=0, minsize=120)   # game action window
+        self.rowconfigure(4, weight=0, minsize=45)
 
         self.create_title()
         self.create_team_windows()
@@ -75,7 +75,7 @@ class PlayActionScreen(tk.Frame):
                  font=("Arial", 24, "bold")).grid(row=0, column=0, pady=(10, 5))
 
     def create_team_windows(self):
-        holder = tk.Frame(self, bg=BG, height=300)
+        holder = tk.Frame(self, bg=BG, height=100)
         holder.grid(row=1, column=0, sticky="nsew", padx=20)
         holder.grid_propagate(False)
         holder.columnconfigure(0, weight=1, uniform="teams")
@@ -106,7 +106,7 @@ class PlayActionScreen(tk.Frame):
         tk.Label(self, text="Current Game Action", fg="cyan", bg=BG,
                  font=("Arial", 16, "bold")).grid(row=2, column=0, pady=(12, 4))
 
-        box = tk.Frame(self, bg=PANEL_BG, height=150, highlightbackground="gray50", highlightthickness=2)
+        box = tk.Frame(self, bg=PANEL_BG, height=120, highlightbackground="gray50", highlightthickness=2)
         box.grid(row=3, column=0, sticky="nsew", padx=30)
         box.grid_propagate(False)
         box.columnconfigure(0, weight=1)

@@ -10,4 +10,6 @@ def get_current_monitor(window): # Returns the current screen info Monitor objec
 
 def fit_current_screen(window):
     m = get_current_monitor(window)
-    window.geometry(f"{m.width}x{m.height}+{m.x}+{m.y}")
+    window_width = m.width
+    window_height = m.height - 80
+    window.geometry(f"{window_width}x{window_height}+{m.x}+{m.y}")
