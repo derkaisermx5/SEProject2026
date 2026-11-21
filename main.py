@@ -42,6 +42,13 @@ def launch_main_screen():
 def start_game(red_players, green_players):  # F5 on the entry screen
     global play_screen
     entry_screen.place_forget()  # hide the entry screen (kept so we can come back later)
+    try:
+        if sys.platform == "win32":
+            root.state("zoomed")
+        else:
+            root.attributes("-zoomed", True)
+    except tk.TclError:
+        print("Maximizing the window is not supported.")
     play_screen = PlayActionScreen(root, red_players, green_players, udp)
     play_screen.pack(fill="both", expand=True)
     play_screen.start_game()

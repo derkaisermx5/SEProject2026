@@ -57,8 +57,9 @@ class PlayActionScreen(tk.Frame):
         self.team_total_labels = {}
 
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=3)   # team windows
-        self.rowconfigure(3, weight=2)   # game action window
+        self.rowconfigure(1, weight=1)   # team windows
+        self.rowconfigure(3, weight=0)   # game action window
+        self.rowconfigure(4, weight=0)
 
         self.create_title()
         self.create_team_windows()
@@ -74,8 +75,9 @@ class PlayActionScreen(tk.Frame):
                  font=("Arial", 24, "bold")).grid(row=0, column=0, pady=(10, 5))
 
     def create_team_windows(self):
-        holder = tk.Frame(self, bg=BG)
+        holder = tk.Frame(self, bg=BG, height=300)
         holder.grid(row=1, column=0, sticky="nsew", padx=20)
+        holder.grid_propagate(False)
         holder.columnconfigure(0, weight=1, uniform="teams")
         holder.columnconfigure(1, weight=1, uniform="teams")
         holder.rowconfigure(0, weight=1)
@@ -104,12 +106,13 @@ class PlayActionScreen(tk.Frame):
         tk.Label(self, text="Current Game Action", fg="cyan", bg=BG,
                  font=("Arial", 16, "bold")).grid(row=2, column=0, pady=(12, 4))
 
-        box = tk.Frame(self, bg=PANEL_BG, highlightbackground="gray50", highlightthickness=2)
+        box = tk.Frame(self, bg=PANEL_BG, height=150, highlightbackground="gray50", highlightthickness=2)
         box.grid(row=3, column=0, sticky="nsew", padx=30)
+        box.grid_propagate(False)
         box.columnconfigure(0, weight=1)
         box.rowconfigure(0, weight=1)
 
-        self.action_text = tk.Text(box, height=6, bg=PANEL_BG, fg="gray100", font=("Arial", 12),
+        self.action_text = tk.Text(box, height=4, bg=PANEL_BG, fg="gray100", font=("Arial", 12),
                                    relief="flat", state="disabled", wrap="word")
         self.action_text.grid(row=0, column=0, sticky="nsew", padx=8, pady=6)
         scroll = tk.Scrollbar(box, command=self.action_text.yview)
@@ -118,7 +121,7 @@ class PlayActionScreen(tk.Frame):
 
     def create_timer(self):
         self.timer_label = tk.Label(self, text="", fg="gray100", bg=BG, font=("Arial", 20, "bold"))
-        self.timer_label.grid(row=4, column=0, pady=(10, 15))
+        self.timer_label.grid(row=4, column=0, pady=(5, 5))
 
     # ---------------- updating ----------------
     def refresh_teams(self):
